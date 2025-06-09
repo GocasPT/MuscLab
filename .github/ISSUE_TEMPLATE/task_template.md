@@ -1,12 +1,12 @@
 ---
 name: Task
-about: Tarefa unitária / sub-issue
+about: Task / sub-issue
 title: "[Task] "
 labels: task
 assignees: ""
 ---
-**Tarefa**  
-Descrição sucinta da tarefa.
+**Task**
+Brief description of the task.
 
-**Detalhes / Notas**  
-- Links, exemplos, instruções.
+**Details / Notes**
+- Links, examples, instructions.
