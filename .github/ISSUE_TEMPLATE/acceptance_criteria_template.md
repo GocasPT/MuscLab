@@ -1,8 +1,8 @@
 ---
 name: Acceptance Criteria
-about: Critério de aceitação
+about: Acceptance criteria
 title: "[AC] "
 labels: ac
 assignees: ""
 ---
-Descrição sucinta do critério de aceitação.
+Brief description of the acceptance criteria.
