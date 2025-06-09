@@ -1,17 +1,17 @@
 ---
 name: User Story
-about: Template para User Story dentro de um épico
+about: Template for User Story within an Epic
 title: "[Story] "
 labels: story
 assignees: ""
 ---
-**User Story**  
-> Como _[persona]_, quero _[ação]_ para _[resultado]_.
+**User Story**
+> As a _[persona]_, I want _[action]_ for _[outcome]_.
 
-**Critérios de Aceitação**  
-- [ ] CA1  
-- [ ] CA2  
+**Acceptance Criteria**
+- [ ] CA1
+- [ ] CA2
 
-**Tarefas**  
-- [ ] #<task-issue-id> Tarefa 1  
-- [ ] #<task-issue-id> Tarefa 2  
+**Tasks**
+- [ ] #<task-issue-id> Task 1
+- [ ] #<task-issue-id> Task 2
