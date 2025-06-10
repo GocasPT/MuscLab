@@ -23,6 +23,7 @@ object AppModule {
     }
 
     @Provides
+    @Singleton
     fun provideExerciseRepository(database: AppDatabase): ExerciseRepository {
         return ExerciseRepositoryImpl(database.exerciseDao())
     }

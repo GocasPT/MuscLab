@@ -9,14 +9,29 @@ class ExerciseRepositoryImpl(private val dao: ExerciseDao) : ExerciseRepository 
     override fun getAllExercises() = dao.getAllExercises()
 
     override suspend fun insert(exercise: ExerciseEntity) = withContext(Dispatchers.IO) {
-        dao.insert(exercise)
+        try {
+            dao.insert(exercise)
+        } catch (e: Exception) {
+            TODO("Not yet implemented")
+            throw RuntimeException("Failed to insert exercise", e)
+        }
     }
 
     override suspend fun update(exercise: ExerciseEntity) = withContext(Dispatchers.IO) {
-        dao.update(exercise)
+        try {
+            dao.update(exercise)
+        } catch (e: Exception) {
+            TODO("Not yet implemented")
+            throw RuntimeException("Failed to update exercise", e)
+        }
     }
 
     override suspend fun delete(exercise: ExerciseEntity) = withContext(Dispatchers.IO) {
-        dao.delete(exercise)
+        try {
+            dao.delete(exercise)
+        } catch (e: Exception) {
+            TODO("Not yet implemented")
+            throw RuntimeException("Failed to delete exercise", e)
+        }
     }
 }

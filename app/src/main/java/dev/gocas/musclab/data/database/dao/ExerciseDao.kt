@@ -15,11 +15,11 @@ interface ExerciseDao {
     suspend fun insert(exercise: ExerciseEntity);
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun update(exercise: ExerciseEntity)
+    suspend fun update(exercise: ExerciseEntity);
 
     @Delete
-    suspend fun delete(exercise: ExerciseEntity)
+    suspend fun delete(exercise: ExerciseEntity);
 
-    @Query("SELECT * FROM exercise ORDER BY id DESC")
-    fun getAllExercises(): Flow<List<ExerciseEntity>>
+    @Query("SELECT * FROM exercise ORDER BY id DESC LIMIT :limit OFFSET :offset")
+    fun getExercisesPaged(limit: Int, offset: Int): Flow<List<ExerciseEntity>>;
 }

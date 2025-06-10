@@ -1,5 +1,6 @@
 package dev.gocas.musclab.ui.navigation
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -24,27 +25,31 @@ fun AppNavHost() {
     ) {
         composable(HOME_PAGE) {
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                Greeting(
-                    name = "Android",
-                    modifier = Modifier.padding(innerPadding)
-                )
+                Column {
+                    Greeting(
+                        name = "Android",
+                        modifier = Modifier.padding(innerPadding)
+                    )
 
-                Button(onClick = {
-                    navController.navigate(PROFILE_PAGE)
-                }) { Text("Profile page") }
+                    Button(onClick = {
+                        navController.navigate(PROFILE_PAGE)
+                    }) { Text("Profile page") }
+                }
             }
         }
 
         composable(PROFILE_PAGE) {
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                Text(
-                    text = "User",
-                    modifier = Modifier.padding(innerPadding)
-                )
+                Column {
+                    Text(
+                        text = "User",
+                        modifier = Modifier.padding(innerPadding)
+                    )
 
-                Button(onClick = {
-                    navController.navigate(HOME_PAGE)
-                }) { Text("Back to Home") }
+                    Button(onClick = {
+                        navController.navigate(HOME_PAGE)
+                    }) { Text("Back to Home") }
+                }
             }
         }
     }

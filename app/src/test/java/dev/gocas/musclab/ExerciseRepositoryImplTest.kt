@@ -32,8 +32,16 @@ class ExerciseRepositoryImplTest {
     @Test
     fun `getAllExercises returns flow of exercises from DAO`() = runTest {
         val exercises = listOf(
-            ExerciseEntity(1, "Push-ups", "Bodyweight exercise"),
-            ExerciseEntity(2, "Squats", "Leg exercise")
+            ExerciseEntity(
+                id = 1,
+                title = "Push-ups",
+                description = "Bodyweight exercise"
+            ),
+            ExerciseEntity(
+                id = 2,
+                title = "Squats",
+                description = "Leg exercise"
+            )
         )
         whenever(exerciseDao.getAllExercises()).thenReturn(flowOf(exercises))
 
@@ -45,7 +53,11 @@ class ExerciseRepositoryImplTest {
 
     @Test
     fun `insert calls dao insert with correct exercise`() = runTest {
-        val exercise = ExerciseEntity(1, "Bench Press", "Chest exercise")
+        val exercise = ExerciseEntity(
+            id =  1,
+            title = "Bench Press",
+            description = "Chest exercise"
+        )
 
         exerciseRepository.insert(exercise)
         advanceUntilIdle() // Ensure coroutine completes
@@ -55,7 +67,11 @@ class ExerciseRepositoryImplTest {
 
     @Test
     fun `update calls dao update with correct exercise`() = runTest {
-        val exercise = ExerciseEntity(1, "Deadlift", "Back exercise")
+        val exercise = ExerciseEntity(
+            id =  1,
+            title = "Deadlift",
+            description = "Back exercise"
+        )
 
         exerciseRepository.update(exercise)
         advanceUntilIdle()
@@ -65,7 +81,11 @@ class ExerciseRepositoryImplTest {
 
     @Test
     fun `delete calls dao delete with correct exercise`() = runTest {
-        val exercise = ExerciseEntity(1, "Bicep Curl", "Arm exercise")
+        val exercise = ExerciseEntity(
+            id =  1,
+            title = "Bicep Curl",
+            description = "Arm exercise"
+        )
 
         exerciseRepository.delete(exercise)
         advanceUntilIdle()
