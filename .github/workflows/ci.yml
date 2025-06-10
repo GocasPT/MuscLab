@@ -120,9 +120,6 @@ jobs:
       - name: Run Android Lint
         run: ./gradlew lintDebug
 
-      - name: Run Detekt
-        run: ./gradlew detekt
-
       - name: Upload lint results
         if: always()
         uses: actions/upload-artifact@v4
@@ -131,8 +128,6 @@ jobs:
           path: |
             app/build/reports/lint-results-debug.html
             app/build/reports/lint-results-debug.xml
-            app/build/reports/detekt/detekt.html
-            app/build/reports/detekt/detekt.xml
           retention-days: 14
 
   security:

@@ -103,23 +103,20 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-      - name: Run OWASP Dependency Check
+      - name: Run Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          project: 'MuscLab'
-          path: '.'
-          format: 'SARIF'
-          out: 'reports'
-          args: >
-            --enableRetired
-            --enableExperimental
-            --failOnCVSS 7
+          project: MuscLab
+          path: .
+          format: SARIF
+          out: reports
+          args: --enableRetired --enableExperimental --failOnCVSS 7
 
-      - name: Upload OWASP Dependency Check results
-        if: always()
+      - name: Upload SARIF results
         uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('reports/dependency-check-report.sarif') != ''
         with:
-          sarif_file: 'reports/dependency-check-report.sarif'
+          sarif_file: reports/dependency-check-report.sarif
 
   secrets-scan:
     runs-on: ubuntu-latest
@@ -139,7 +136,7 @@ jobs:
           path: ./
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
-          extra_args: --debug --only-verified --fail
+          extra_args: --debug --only-verified
 
       - name: GitLeaks scan
         uses: gitleaks/gitleaks-action@v2

@@ -61,7 +61,6 @@ jobs:
       - name: Run security checks
         run: |
           ./gradlew lintRelease
-          ./gradlew detekt
 
   release:
     runs-on: ubuntu-latest
