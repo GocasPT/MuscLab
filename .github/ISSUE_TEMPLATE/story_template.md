@@ -9,9 +9,7 @@ assignees: ""
 > As a _[persona]_, I want _[action]_ for _[outcome]_.
 
 **Acceptance Criteria**
-- [ ] CA1
-- [ ] CA2
+- [ ] #<ac-issue-id>
 
 **Tasks**
-- [ ] #<task-issue-id> Task 1
-- [ ] #<task-issue-id> Task 2
+- [ ] #<task-issue-id>
