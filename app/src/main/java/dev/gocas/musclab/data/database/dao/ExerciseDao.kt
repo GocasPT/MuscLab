@@ -20,6 +20,6 @@ interface ExerciseDao {
     @Delete
     suspend fun delete(exercise: ExerciseEntity);
 
-    @Query("SELECT * FROM exercise ORDER BY id DESC LIMIT :limit OFFSET :offset")
-    fun getExercisesPaged(limit: Int, offset: Int): Flow<List<ExerciseEntity>>;
+    @Query("SELECT * FROM exercise ORDER BY id DESC")
+    fun getAllExercises(): Flow<List<ExerciseEntity>>;
 }
