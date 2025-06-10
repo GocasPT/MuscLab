@@ -4,12 +4,70 @@ on:
     tags: ['v*']
 
 jobs:
+  validate-and-build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      version-code: ${{ steps.version.outputs.version-code }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag format
+        run: |
+          if [[ ! "${{ github.ref_name }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid tag format. Expected: v1.2.3"
+            exit 1
+          fi
+          echo "✅ Tag format is valid"
+
+      - name: Extract version info
+        id: version
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION_NAME="${VERSION#v}"
+          VERSION_CODE=$(date +%s)
+          echo "version=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version-code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION_NAME (Code: $VERSION_CODE)"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      - name: Run tests before release
+        run: ./gradlew testReleaseUnitTest
+
+      - name: Run security checks
+        run: |
+          ./gradlew lintRelease
+
   release:
     runs-on: ubuntu-latest
+    needs: validate-and-build
     permissions:
       contents: write
-      pull-requests: write
-    
+    environment: production
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,9 +87,49 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
+
+      - name: Validate signing secrets
+        run: |
+          MISSING_SECRETS=()
+          
+          if [[ -z "${{ secrets.SIGNING_KEY }}" ]]; then
+            MISSING_SECRETS+=("SIGNING_KEY")
+          fi
+          
+          if [[ -z "${{ secrets.ALIAS }}" ]]; then
+            MISSING_SECRETS+=("ALIAS")
+          fi
+          
+          if [[ -z "${{ secrets.KEY_STORE_PASSWORD }}" ]]; then
+            MISSING_SECRETS+=("KEY_STORE_PASSWORD")
+          fi
+          
+          if [[ -z "${{ secrets.KEY_PASSWORD }}" ]]; then
+            MISSING_SECRETS+=("KEY_PASSWORD")
+          fi
+          
+          if [[ ${#MISSING_SECRETS[@]} -gt 0 ]]; then
+            echo "❌ Missing required secrets: ${MISSING_SECRETS[*]}"
+            exit 1
+          fi
+          
+          echo "✅ All required secrets are present"
+
+      - name: Update version in build files
+        run: |
+          VERSION_NAME="${{ needs.validate-and-build.outputs.version }}"
+          VERSION_CODE="${{ needs.validate-and-build.outputs.version-code }}"
+          
+          # Update app/build.gradle.kts
+          sed -i "s/versionName = \".*\"/versionName = \"$VERSION_NAME\"/" app/build.gradle.kts
+          sed -i "s/versionCode = .*/versionCode = $VERSION_CODE/" app/build.gradle.kts
+          
+          echo "Updated version to $VERSION_NAME ($VERSION_CODE)"
 
       - name: Build release APK
         run: ./gradlew assembleRelease
@@ -45,14 +143,62 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+
+      - name: Verify signed APK
+        run: |
+          if [[ ! -f "${{ steps.sign_app.outputs.signedReleaseFile }}" ]]; then
+            echo "❌ Signed APK not found"
+            exit 1
+          fi
+          
+          # Get APK info
+          APK_SIZE=$(stat -c%s "${{ steps.sign_app.outputs.signedReleaseFile }}")
+          APK_SIZE_MB=$(echo "scale=2; $APK_SIZE / 1024 / 1024" | bc)
+          
+          echo "✅ Signed APK created successfully"
+          echo "📱 APK size: ${APK_SIZE_MB} MB"
+          echo "APK_SIZE_MB=$APK_SIZE_MB" >> $GITHUB_ENV
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Get commits since last tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            echo "## 🚀 What's New" > release_notes.md
+            echo "" >> release_notes.md
+            git log --pretty=format:"- %s" $PREVIOUS_TAG..HEAD >> release_notes.md
+            echo "" >> release_notes.md
+          else
+            echo "## 🚀 Initial Release" > release_notes.md
+            echo "" >> release_notes.md
+            echo "First release of MuscLab Android app." >> release_notes.md
+            echo "" >> release_notes.md
+          fi
+          
+          echo "" >> release_notes.md
+          echo "## 📱 APK Information" >> release_notes.md
+          echo "- **Size**: ${{ env.APK_SIZE_MB }} MB" >> release_notes.md
+          echo "- **Min SDK**: 26 (Android 8.0)" >> release_notes.md
+          echo "- **Target SDK**: 35 (Android 15)" >> release_notes.md
 
       - name: Create GitHub Release
-        run: |
-          gh release create "${{ github.ref_name }}" \
-            --repo="${{ github.repository }}" \
-            --title="MuscLab ${{ github.ref_name }}" \
-            --generate-notes \
-            --verify-tag \
-            ${{ steps.sign_app.outputs.signedReleaseFile }}
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "MuscLab ${{ github.ref_name }}"
+          body_path: release_notes.md
+          files: ${{ steps.sign_app.outputs.signedReleaseFile }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Release failed for ${{ github.ref_name }}"
+          echo "Please check the workflow logs and fix any issues."
